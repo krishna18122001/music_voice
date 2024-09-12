@@ -1,13 +1,3 @@
-#pip install streamlit
-#pip install openai-whisper
-#pip install os
-#pip install transformers
-#pip install pyttsx3
-#pip install sounddevice
-#pip install numpy
-#pip install wavio
-
-
 import streamlit as st
 import whisper
 import os
@@ -65,10 +55,11 @@ def record_audio(duration=5, fs=44100):
         return np.array([])
 
 # Save the recording to a temporary file
-def save_audio(audio, fs, file_name="output.wav"):
+def save_audio(audio, fs):
     try:
-        temp_file_path = os.path.join(tempfile.gettempdir(), file_name)
-        wavio.write(temp_file_path, audio, fs, sampwidth=2)
+        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
+            temp_file_path = temp_file.name
+            wavio.write(temp_file_path, audio, fs, sampwidth=2)
         return temp_file_path
     except Exception as e:
         st.error(f"Error saving audio file: {e}")
@@ -82,10 +73,10 @@ uploaded_file = st.file_uploader("Upload an MP3 file", type=["mp3"])
 
 if uploaded_file is not None:
     # Save the uploaded file to a temporary location
-    temp_file_path = os.path.join("temp", uploaded_file.name)
-    os.makedirs("temp", exist_ok=True)  # Ensure the temp directory exists
-    with open(temp_file_path, "wb") as f:
-        f.write(uploaded_file.read())
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp_file:
+        temp_file_path = temp_file.name
+        with open(temp_file_path, "wb") as f:
+            f.write(uploaded_file.read())
 
     # Transcribe the uploaded audio file
     with st.spinner("Transcribing audio..."):
